@@ -58,3 +58,10 @@ dan wachten op reboot en `nc -lvnp 4445`
 
 - restart ubuntu vm na hijack voor root access.
   - je kan eerst eens `cat /home/papercut/providers/print-deploy/linux-x64/pc-print-deploy` doen om hijack te kijken
+
+### 2026-04-22
+
+- config wordt via python script nu aangepast en gerevert
+  - reverting nog niet getest...
+
+- nu juist nog een manier zoeken om te restarten if possible

