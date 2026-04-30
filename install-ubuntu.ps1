@@ -87,11 +87,7 @@ function Provision-VM {
         -batch `
         "echo $GUEST_PASS | sudo -S mkdir -p /mnt/papercut_share && echo $GUEST_PASS | sudo -S mount -t vboxsf papercut_share /mnt/papercut_share"
 
-    & $PLINK -ssh 127.0.0.1 -P 2222 `
-        -l $GUEST_USER `
-        -pw $GUEST_PASS `
-        -batch `
-        "chmod +x /mnt/papercut_share/papercut.sh && /mnt/papercut_share/papercut.sh"
+     & $PLINK -ssh 127.0.0.1 -P 2222 -l $GUEST_USER -pw $GUEST_PASS -batch -T "sed -i 's/\r$//' /mnt/papercut_share/papercut.sh && chmod +x /mnt/papercut_share/papercut.sh && /mnt/papercut_share/papercut.sh"
 
 
     Write-Host "Done! Shared folder should be mounted."
